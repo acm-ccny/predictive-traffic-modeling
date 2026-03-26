@@ -1,0 +1,11 @@
+data/raw/
+data/processed/
+*.csv
+# ignore Mac system files
+.DS_Store
+
+# ignore datasets
+data/
+
+# (optional but fine)
+*.csv
