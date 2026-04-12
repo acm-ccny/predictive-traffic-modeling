@@ -10,3 +10,6 @@ data/
 # (optional but fine)
 *.csv
 data/merged/merged_dataset.csv
+data/merged/merged_dataset_aggregated.csv
+data/merged/merged_dataset_detailed.csv
+data/ml_datasets/*.csv
