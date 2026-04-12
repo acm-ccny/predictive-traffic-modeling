@@ -9,3 +9,4 @@ data/
 
 # (optional but fine)
 *.csv
+data/merged/merged_dataset.csv
