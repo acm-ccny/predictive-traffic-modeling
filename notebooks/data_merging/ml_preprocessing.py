@@ -236,6 +236,10 @@ drop_cols = [
     "status",
     # time-joined columns are all null due to dataset date range mismatch
     "median_tt_sec", "median_speed_fps", "n_samples", "travel_time",
+    # dataset1 link_names use a different format than dataset2, so the
+    # outer join in build_static_link_features never matches; these
+    # columns are entirely null in every output row
+    "link_length_ft", "avg_median_tt_sec", "avg_median_speed_fps", "avg_n_samples",
 ]
 detail = detail.drop(columns=[c for c in drop_cols if c in detail.columns])
 
@@ -266,7 +270,8 @@ scaler = StandardScaler()
 congestion_features[scale_cols] = scaler.fit_transform(congestion_features[scale_cols])
 
 congestion_ml = pd.concat([congestion_features, congestion_targets], axis=1)
-congestion_ml.to_csv("congestion_ml.csv", index=False)
+ML_OUT = HERE.parent.parent / "data" / "ml_datasets"
+congestion_ml.to_csv(ML_OUT / "congestion_ml.csv", index=False)
 
 print(f"  Shape: {congestion_ml.shape}")
 print(f"  Saved → congestion_ml.csv")
@@ -371,7 +376,7 @@ routing_edges = seg_hour[[
     "hour_sin", "hour_cos", "dow_sin", "dow_cos",
 ]].copy()
 
-routing_edges.to_csv("routing_edges.csv", index=False)
+routing_edges.to_csv(ML_OUT / "routing_edges.csv", index=False)
 print(f"  Routing edges shape: {routing_edges.shape}")
 print(f"  Saved → routing_edges.csv")
 
@@ -386,7 +391,7 @@ routing_nodes = (
     .agg(lat=("lat", "mean"), lon=("lon", "mean"))
 )
 
-routing_nodes.to_csv("routing_nodes.csv", index=False)
+routing_nodes.to_csv(ML_OUT / "routing_nodes.csv", index=False)
 print(f"  Routing nodes shape: {routing_nodes.shape}")
 print(f"  Saved → routing_nodes.csv")
 
