@@ -63,13 +63,80 @@ pairs = tree.query_pairs(0.03) # Connecting nodes within ~2.2km radius
 for i, j in pairs:
     u, v = nodes.iloc[i]['node_id'], nodes.iloc[j]['node_id']
     if not G.has_edge(u, v):
-        dist = np.sqrt((nodes.iloc[i]['lat']-nodes.iloc[j]['lat'])**2 + 
-                       (nodes.iloc[i]['lon']-nodes.iloc[j]['lon'])**2) * 111000
-        time_est = dist / 8.0 # Approx 18mph city average
-        edge_lookup[(u, v)] = {'times': {}, 'borough': 'Manhattan', 'is_virtual': True, 'base_time': time_est}
-        edge_lookup[(v, u)] = {'times': {}, 'borough': 'Manhattan', 'is_virtual': True, 'base_time': time_est}
+        dist = np.sqrt(
+            (nodes.iloc[i]['lat'] - nodes.iloc[j]['lat']) ** 2
+            + (nodes.iloc[i]['lon'] - nodes.iloc[j]['lon']) ** 2
+        ) * 111000
+
+        time_est = max(dist / 8.0, 10)
+
+        edge_info = {
+            'times': {},
+            'borough': 'Manhattan',
+            'is_virtual': True,
+            'base_time': time_est,
+        }
+        # Same dict for both directions: G adds u→v and v→u; costs are symmetric.
+        edge_lookup[(u, v)] = edge_info
+        edge_lookup[(v, u)] = edge_info
+
         G.add_edge(u, v)
         G.add_edge(v, u)
+
+
+def _virtual_edge_info(lat1, lon1, lat2, lon2):
+    """Travel-time payload for synthetic edges (same formula as nearby-node healing)."""
+    dist_m = np.sqrt((lat1 - lat2) ** 2 + (lon1 - lon2) ** 2) * 111000
+    time_est = max(dist_m / 8.0, 10)
+    return {
+        'times': {},
+        'borough': 'Manhattan',
+        'is_virtual': True,
+        'base_time': time_est,
+    }
+
+
+def _bridge_components(graph, lookup, components_fn):
+    """
+    Join disjoint components by adding a bidirectional virtual edge between the
+    geographically closest node pair across two different components. Repeat until
+    one component remains (weakly or strongly, depending on components_fn).
+    """
+    while True:
+        comps = list(components_fn(graph))
+        if len(comps) <= 1:
+            break
+
+        best_d, best_u, best_v = float('inf'), None, None
+        for i in range(len(comps)):
+            for j in range(i + 1, len(comps)):
+                for u in comps[i]:
+                    nu = graph.nodes[u]
+                    for v in comps[j]:
+                        nv = graph.nodes[v]
+                        d = np.sqrt(
+                            (nu['lat'] - nv['lat']) ** 2
+                            + (nu['lon'] - nv['lon']) ** 2
+                        )
+                        if d < best_d:
+                            best_d, best_u, best_v = d, u, v
+
+        edge_info = _virtual_edge_info(
+            graph.nodes[best_u]['lat'],
+            graph.nodes[best_u]['lon'],
+            graph.nodes[best_v]['lat'],
+            graph.nodes[best_v]['lon'],
+        )
+        lookup[(best_u, best_v)] = edge_info
+        lookup[(best_v, best_u)] = edge_info
+        graph.add_edge(best_u, best_v)
+        graph.add_edge(best_v, best_u)
+
+
+# CSV edges leave ~44 weak regions; KDTree healing does not always connect them.
+_bridge_components(G, edge_lookup, nx.weakly_connected_components)
+# One-way streets can still block s→t even when the map is one weak component.
+_bridge_components(G, edge_lookup, nx.strongly_connected_components)
 
 # =========================
 # 5. COST FUNCTION
@@ -92,6 +159,9 @@ def get_dynamic_cost(u, v, current_time_sec):
 # 6. ROUTING
 # =========================
 def predict_route(source, target, start_hour):
+    if source == target:
+        return [source], 0
+
     start_sec = start_hour * 3600
     pq = [(start_sec, source)]
     best = {source: start_sec}
@@ -132,6 +202,12 @@ def render_map(G, path):
     folium.Marker(coords[0], popup="Start", icon=folium.Icon(color='green')).add_to(m)
     folium.Marker(coords[-1], popup="End", icon=folium.Icon(color='red')).add_to(m)
     return m
+
+
+def render_map_with_congestion(G, path, start_hour=None):
+    """Alias for Streamlit; congestion styling does not vary by hour in this map."""
+    return render_map(G, path)
+
 
 # Example Usage
 if __name__ == "__main__":
