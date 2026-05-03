@@ -1,0 +1,12 @@
+streamlit
+streamlit-folium
+folium
+pandas
+numpy
+networkx
+scikit-learn
+scipy
+requests
+polyline
+python-dotenv
+pytest

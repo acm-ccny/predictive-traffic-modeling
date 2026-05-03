@@ -18,3 +18,5 @@ data/ml_datasets/*.csv
 !data/ml_datasets/*.zip
 !data/merged/
 !data/merged/*.zip
+.streamlit/secrets.toml
+.env
