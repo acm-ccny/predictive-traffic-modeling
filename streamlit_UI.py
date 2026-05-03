@@ -72,7 +72,6 @@ def _recompute_routes() -> None:
                         "model_eta_min": model_eta_sec / 60.0,
                         "delta_min_model_minus_google": (model_eta_sec - route.duration_sec) / 60.0,
                         "distance_km": route.distance_m / 1000.0,
-                        "google_traffic_eta": route.uses_duration_in_traffic,
                         "summary": route.summary,
                     }
                 )
@@ -83,7 +82,6 @@ def _recompute_routes() -> None:
                         "color": colors[(idx - 1) % len(colors)],
                         "google_duration_sec": route.duration_sec,
                         "model_eta_sec": model_eta_sec,
-                        "google_uses_traffic": route.uses_duration_in_traffic,
                         "label": "",
                     }
                 )
