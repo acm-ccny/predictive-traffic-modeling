@@ -16,9 +16,9 @@ from google_places import get_maps_api_key
 
 # Keep default behavior aligned with routing_engine without importing heavy model code.
 GOOGLE_DIRECTIONS_AVOID = os.environ.get("GOOGLE_DIRECTIONS_AVOID", "highways").strip()
-# Default off: compare to static `duration` so model ETAs align with a stable Google baseline.
-# Set to 1 to use `duration_in_traffic` when departure_time is sent (closer to in-app Maps live).
-GOOGLE_DIRECTIONS_USE_TRAFFIC = os.environ.get("GOOGLE_DIRECTIONS_USE_TRAFFIC", "0").strip().lower() in (
+# Default on: use `duration_in_traffic` when departure_time is sent (closer to in-app Maps live).
+# Set GOOGLE_DIRECTIONS_USE_TRAFFIC=0 to force static `duration`.
+GOOGLE_DIRECTIONS_USE_TRAFFIC = os.environ.get("GOOGLE_DIRECTIONS_USE_TRAFFIC", "1").strip().lower() in (
     "1",
     "true",
     "yes",

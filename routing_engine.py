@@ -34,14 +34,20 @@ GOOGLE_DIRECTIONS_AVOID = os.environ.get("GOOGLE_DIRECTIONS_AVOID", "highways").
 # =========================
 ml_features = [
     "hour",
+    "day_of_week",
     "is_weekend",
     "is_rush_hour",
+    "dow_sin",
+    "dow_cos",
     "borough_Bronx",
     "borough_Brooklyn",
     "borough_Manhattan",
     "borough_Queens",
     "borough_Staten Island",
 ]
+
+# Keep compatibility if older training snapshots are missing newer time features.
+ml_features = [f for f in ml_features if f in ml_data.columns]
 
 ml_data_clean = ml_data.dropna(subset=["avg_travel_time"])
 X_train = ml_data_clean[ml_features]
@@ -77,6 +83,26 @@ def _is_rush_hour(hour: int) -> int:
     return 1 if (7 <= hour <= 9 or 16 <= hour <= 19) else 0
 
 
+def _day_index(day_of_week: int | str | None, is_weekend: int = 0) -> int:
+    if isinstance(day_of_week, str):
+        days = {
+            "monday": 0,
+            "tuesday": 1,
+            "wednesday": 2,
+            "thursday": 3,
+            "friday": 4,
+            "saturday": 5,
+            "sunday": 6,
+        }
+        idx = days.get(day_of_week.strip().lower())
+        if idx is not None:
+            return idx
+    if isinstance(day_of_week, (int, np.integer)):
+        return int(day_of_week) % 7
+    # Fallback keeps backward compatibility for callers that only pass weekend/weekday.
+    return 6 if int(is_weekend) else 2
+
+
 def _urban_free_flow_mps(borough: str, hour: int) -> float:
     """Typical free-flow-ish urban driving speed (m/s), lower during rush."""
     rush = _is_rush_hour(hour)
@@ -98,18 +124,25 @@ def _virtual_speed_mps(borough: str, hour: int) -> float:
     return max(3.6, base * 0.50)
 
 
-def rf_travel_multiplier(hour: int, is_weekend: int, borough: str) -> float:
+def rf_travel_multiplier(
+    hour: int, is_weekend: int, borough: str, day_of_week: int | str | None = None
+) -> float:
     """
     Map RF output (trained on avg_travel_time scale) to a congestion multiplier
     instead of using raw seconds as a per-edge travel time.
     """
     b_flags = _borough_flags(borough)
+    day_idx = _day_index(day_of_week, is_weekend=is_weekend)
+    dow_rad = 2.0 * math.pi * (float(day_idx) / 7.0)
     inp = pd.DataFrame(
         [
             {
                 "hour": hour,
+                "day_of_week": day_idx,
                 "is_weekend": int(is_weekend),
                 "is_rush_hour": _is_rush_hour(hour),
+                "dow_sin": math.sin(dow_rad),
+                "dow_cos": math.cos(dow_rad),
                 **b_flags,
             }
         ]

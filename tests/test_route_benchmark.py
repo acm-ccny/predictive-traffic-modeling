@@ -28,247 +28,108 @@ class RouteCase:
     hour: int
 
 
-ROUTE_CASES = [
-    RouteCase(
-        name="Flushing Main St -> Bayside LIRR",
-        origin="Flushing–Main St Station, Queens, NY",
-        destination="Bayside LIRR Station, Queens, NY",
-        origin_borough="Queens",
-        destination_borough="Queens",
-        scenario="weekday_offpeak",
-        day_of_week="Monday",
-        hour=11,
-    ),
-    RouteCase(
+@dataclass(frozen=True)
+class RouteGroup:
+    name: str
+    origin: str
+    destination: str
+    origin_borough: str
+    destination_borough: str
+
+
+ROUTE_GROUPS = [
+    RouteGroup(
         name="Times Square -> Wall Street",
         origin="Times Square, New York, NY",
         destination="Wall Street, New York, NY",
         origin_borough="Manhattan",
         destination_borough="Manhattan",
-        scenario="weekday_peak",
-        day_of_week="Monday",
-        hour=8,
     ),
-    RouteCase(
-        name="Astoria -> JFK Terminal 4",
-        origin="Astoria, Queens, NY",
-        destination="JFK Terminal 4, Queens, NY",
-        origin_borough="Queens",
-        destination_borough="Queens",
-        scenario="weekday_offpeak",
-        day_of_week="Wednesday",
-        hour=14,
-    ),
-    RouteCase(
-        name="Yankee Stadium -> Coney Island",
-        origin="Yankee Stadium, Bronx, NY",
-        destination="Coney Island, Brooklyn, NY",
-        origin_borough="Bronx",
-        destination_borough="Brooklyn",
-        scenario="weekend_offpeak",
-        day_of_week="Saturday",
-        hour=13,
-    ),
-    RouteCase(
-        name="St George Terminal -> SI Mall",
-        origin="St George Ferry Terminal, Staten Island, NY",
-        destination="Staten Island Mall, Staten Island, NY",
-        origin_borough="Staten Island",
-        destination_borough="Staten Island",
-        scenario="weekday_peak",
-        day_of_week="Thursday",
-        hour=17,
-    ),
-    RouteCase(
-        name="Pelham Bay -> Fordham",
-        origin="Pelham Bay Park, Bronx, NY",
-        destination="Fordham University, Bronx, NY",
-        origin_borough="Bronx",
-        destination_borough="Bronx",
-        scenario="weekday_offpeak",
-        day_of_week="Tuesday",
-        hour=11,
-    ),
-    RouteCase(
+    RouteGroup(
         name="Downtown Brooklyn -> Williamsburg",
         origin="Downtown Brooklyn, Brooklyn, NY",
         destination="Williamsburg, Brooklyn, NY",
         origin_borough="Brooklyn",
         destination_borough="Brooklyn",
-        scenario="weekend_peak",
-        day_of_week="Saturday",
-        hour=8,
     ),
-    RouteCase(
+    RouteGroup(
         name="Long Island City -> Flushing",
         origin="Long Island City, Queens, NY",
         destination="Flushing, Queens, NY",
         origin_borough="Queens",
         destination_borough="Queens",
-        scenario="weekend_offpeak",
-        day_of_week="Sunday",
-        hour=14,
     ),
-    RouteCase(
+    RouteGroup(
+        name="Pelham Bay -> Fordham",
+        origin="Pelham Bay Park, Bronx, NY",
+        destination="Fordham University, Bronx, NY",
+        origin_borough="Bronx",
+        destination_borough="Bronx",
+    ),
+    RouteGroup(
+        name="St George Terminal -> SI Mall",
+        origin="St George Ferry Terminal, Staten Island, NY",
+        destination="Staten Island Mall, Staten Island, NY",
+        origin_borough="Staten Island",
+        destination_borough="Staten Island",
+    ),
+    RouteGroup(
         name="Harlem -> Astoria",
         origin="Harlem, New York, NY",
         destination="Astoria, Queens, NY",
         origin_borough="Manhattan",
         destination_borough="Queens",
-        scenario="weekday_peak",
-        day_of_week="Tuesday",
-        hour=8,
     ),
-    RouteCase(
-        name="Bayside -> Midtown",
-        origin="Bayside, Queens, NY",
-        destination="Midtown Manhattan, New York, NY",
-        origin_borough="Queens",
-        destination_borough="Manhattan",
-        scenario="weekday_offpeak",
-        day_of_week="Wednesday",
-        hour=13,
-    ),
-    RouteCase(
-        name="Park Slope -> SoHo",
-        origin="Park Slope, Brooklyn, NY",
-        destination="SoHo, New York, NY",
-        origin_borough="Brooklyn",
-        destination_borough="Manhattan",
-        scenario="weekday_peak",
-        day_of_week="Friday",
-        hour=17,
-    ),
-    RouteCase(
-        name="Chelsea -> Bushwick",
-        origin="Chelsea, New York, NY",
-        destination="Bushwick, Brooklyn, NY",
-        origin_borough="Manhattan",
-        destination_borough="Brooklyn",
-        scenario="weekend_offpeak",
-        day_of_week="Sunday",
-        hour=12,
-    ),
-    RouteCase(
-        name="Bronx Zoo -> LaGuardia",
-        origin="Bronx Zoo, Bronx, NY",
-        destination="LaGuardia Airport, Queens, NY",
-        origin_borough="Bronx",
-        destination_borough="Queens",
-        scenario="weekday_peak",
-        day_of_week="Thursday",
-        hour=8,
-    ),
-    RouteCase(
-        name="Jamaica -> Yankee Stadium",
-        origin="Jamaica, Queens, NY",
-        destination="Yankee Stadium, Bronx, NY",
-        origin_borough="Queens",
-        destination_borough="Bronx",
-        scenario="weekday_offpeak",
-        day_of_week="Monday",
-        hour=11,
-    ),
-    RouteCase(
+    RouteGroup(
         name="Bay Ridge -> Bronx Terminal",
         origin="Bay Ridge, Brooklyn, NY",
         destination="Bronx Terminal Market, Bronx, NY",
         origin_borough="Brooklyn",
         destination_borough="Bronx",
-        scenario="weekend_peak",
-        day_of_week="Saturday",
-        hour=9,
     ),
-    RouteCase(
-        name="Morris Park -> Downtown Brooklyn",
-        origin="Morris Park, Bronx, NY",
-        destination="Downtown Brooklyn, Brooklyn, NY",
-        origin_borough="Bronx",
-        destination_borough="Brooklyn",
-        scenario="weekend_offpeak",
-        day_of_week="Sunday",
-        hour=15,
-    ),
-    RouteCase(
+    RouteGroup(
         name="St George -> Financial District",
         origin="St George Ferry Terminal, Staten Island, NY",
         destination="Financial District, New York, NY",
         origin_borough="Staten Island",
         destination_borough="Manhattan",
-        scenario="weekday_peak",
-        day_of_week="Wednesday",
-        hour=8,
     ),
-    RouteCase(
+    RouteGroup(
         name="Lower Manhattan -> Staten Island Mall",
         origin="Battery Park, New York, NY",
         destination="Staten Island Mall, Staten Island, NY",
         origin_borough="Manhattan",
         destination_borough="Staten Island",
-        scenario="weekday_offpeak",
-        day_of_week="Tuesday",
-        hour=14,
     ),
-    RouteCase(
-        name="Sunset Park -> SI Mall",
-        origin="Sunset Park, Brooklyn, NY",
-        destination="Staten Island Mall, Staten Island, NY",
-        origin_borough="Brooklyn",
-        destination_borough="Staten Island",
-        scenario="weekend_peak",
-        day_of_week="Saturday",
-        hour=8,
-    ),
-    RouteCase(
-        name="Staten Island Mall -> Bay Ridge",
-        origin="Staten Island Mall, Staten Island, NY",
-        destination="Bay Ridge, Brooklyn, NY",
-        origin_borough="Staten Island",
-        destination_borough="Brooklyn",
-        scenario="weekend_offpeak",
-        day_of_week="Sunday",
-        hour=13,
-    ),
-    RouteCase(
-        name="SI Mall -> Flushing",
-        origin="Staten Island Mall, Staten Island, NY",
-        destination="Flushing, Queens, NY",
-        origin_borough="Staten Island",
-        destination_borough="Queens",
-        scenario="weekday_peak",
-        day_of_week="Friday",
-        hour=17,
-    ),
-    RouteCase(
-        name="Flushing -> St George Terminal",
-        origin="Flushing, Queens, NY",
-        destination="St George Ferry Terminal, Staten Island, NY",
-        origin_borough="Queens",
-        destination_borough="Staten Island",
-        scenario="weekday_offpeak",
-        day_of_week="Thursday",
-        hour=12,
-    ),
-    RouteCase(
-        name="Arthur Ave -> Staten Island Mall",
-        origin="Arthur Avenue, Bronx, NY",
-        destination="Staten Island Mall, Staten Island, NY",
+    RouteGroup(
+        name="Bronx Zoo -> LaGuardia",
+        origin="Bronx Zoo, Bronx, NY",
+        destination="LaGuardia Airport, Queens, NY",
         origin_borough="Bronx",
-        destination_borough="Staten Island",
-        scenario="weekend_peak",
-        day_of_week="Saturday",
-        hour=9,
+        destination_borough="Queens",
     ),
+]
+
+SCENARIOS = [
+    ("weekday_peak", "Monday", 8),
+    ("weekday_offpeak", "Wednesday", 14),
+    ("weekend_peak", "Saturday", 9),
+    ("weekend_offpeak", "Sunday", 13),
+]
+
+ROUTE_CASES = [
     RouteCase(
-        name="St George -> Fordham",
-        origin="St George Ferry Terminal, Staten Island, NY",
-        destination="Fordham University, Bronx, NY",
-        origin_borough="Staten Island",
-        destination_borough="Bronx",
-        scenario="weekend_offpeak",
-        day_of_week="Sunday",
-        hour=14,
-    ),
+        name=group.name,
+        origin=group.origin,
+        destination=group.destination,
+        origin_borough=group.origin_borough,
+        destination_borough=group.destination_borough,
+        scenario=scenario,
+        day_of_week=day,
+        hour=hour,
+    )
+    for group in ROUTE_GROUPS
+    for scenario, day, hour in SCENARIOS
 ]
 
 
@@ -281,14 +142,26 @@ def _fmt_minutes(seconds: float) -> str:
 
 
 def _build_output_table(rows: list[dict[str, str]]) -> str:
-    headers = ["Case", "Dep", "Google(min)", "Model(min)", "Delta(min)", "Dist(km)", "Google Route"]
+    headers = [
+        "Case",
+        "Scenario",
+        "Dep",
+        "Google(min)",
+        "Model(min)",
+        "Delta(min)",
+        "Dist(km)",
+        "GoogleTraffic",
+        "Google Route",
+    ]
     cols = [
         [r["case"] for r in rows],
+        [r["scenario"] for r in rows],
         [r["dep"] for r in rows],
         [r["google_min"] for r in rows],
         [r["model_min"] for r in rows],
         [r["delta_min"] for r in rows],
         [r["distance_km"] for r in rows],
+        [r["google_traffic"] for r in rows],
         [r["summary"] for r in rows],
     ]
     widths = [max(len(headers[i]), max((len(v) for v in col), default=0)) for i, col in enumerate(cols)]
@@ -299,12 +172,14 @@ def _build_output_table(rows: list[dict[str, str]]) -> str:
         " | ".join(
             [
                 r["case"].ljust(widths[0]),
-                r["dep"].ljust(widths[1]),
-                r["google_min"].rjust(widths[2]),
-                r["model_min"].rjust(widths[3]),
-                r["delta_min"].rjust(widths[4]),
-                r["distance_km"].rjust(widths[5]),
-                r["summary"].ljust(widths[6]),
+                r["scenario"].ljust(widths[1]),
+                r["dep"].ljust(widths[2]),
+                r["google_min"].rjust(widths[3]),
+                r["model_min"].rjust(widths[4]),
+                r["delta_min"].rjust(widths[5]),
+                r["distance_km"].rjust(widths[6]),
+                r["google_traffic"].ljust(widths[7]),
+                r["summary"].ljust(widths[8]),
             ]
         )
         for r in rows
@@ -397,6 +272,7 @@ def test_route_benchmark_against_google() -> None:
             points=points,
             departure_hour=case.hour,
             is_weekend=_is_weekend(case.day_of_week),
+            day_of_week=case.day_of_week,
             google_distance_m=route.distance_m,
         )
         google_sec = float(route.duration_sec)
@@ -410,11 +286,13 @@ def test_route_benchmark_against_google() -> None:
         rows.append(
             {
                 "case": case.name,
+                "scenario": case.scenario,
                 "dep": f"{case.day_of_week[:3]} {case.hour:02d}:00",
                 "google_min": _fmt_minutes(google_sec),
                 "model_min": _fmt_minutes(model_sec),
                 "delta_min": f"{delta_min:6.2f}",
                 "distance_km": f"{route.distance_m / 1000.0:6.2f}",
+                "google_traffic": "yes" if route.uses_duration_in_traffic else "no",
                 "summary": route.summary or "-",
             }
         )

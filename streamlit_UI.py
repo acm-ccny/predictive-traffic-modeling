@@ -63,6 +63,7 @@ def _recompute_routes() -> None:
                     points,
                     hour,
                     is_weekend=is_weekend,
+                    day_of_week=day_of_week,
                     google_distance_m=route.distance_m,
                 )
                 rows.append(
@@ -157,7 +158,7 @@ if result is not None:
                 f"our model selects Route {m_idx}."
             )
         st.info(
-            "Comparison notes: Our model uses hour, weekend flag, rush-hour flag, and "
+            "Comparison notes: Our model uses hour, day-of-week/weekend signals, rush-hour flag, and "
             "borough context per segment, with **partial** length calibration vs Google's "
             "reported distance. By default Google uses static duration and overview "
             "polylines; enable traffic or step polylines via env vars (see README / "

@@ -53,6 +53,7 @@ def score_polyline_eta_seconds(
     departure_hour: int,
     is_weekend: int,
     *,
+    day_of_week: int | str | None = None,
     google_distance_m: float | None = None,
 ) -> float:
     """
@@ -89,7 +90,7 @@ def score_polyline_eta_seconds(
         hour = (int(current_time_sec) // 3600) % 24
         borough = _nearest_borough(a[0], a[1])
         ff = length_m / max(1e-6, _urban_free_flow_mps(borough, hour))
-        mult = rf_travel_multiplier(hour, is_weekend, borough)
+        mult = rf_travel_multiplier(hour, is_weekend, borough, day_of_week=day_of_week)
         delay = _urban_intersection_delay_sec(borough, hour, length_m)
         segment_seconds = max(0.85, ff * mult + delay)
         total_sec += segment_seconds
