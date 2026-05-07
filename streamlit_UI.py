@@ -1,4 +1,7 @@
 # This STREAMLIT APP should actually be a separate .py file, but for simplicity we include it here.
+from __future__ import annotations
+
+import math
 import pandas as pd
 import streamlit as st
 from streamlit_folium import st_folium
@@ -7,6 +10,9 @@ from google_directions import fetch_route_alternatives
 from google_places import resolve_place
 from google_route_scoring import decode_polyline, score_polyline_eta_seconds
 from routing_engine import render_multi_route_map
+
+# Lateral separation between overlapping route polylines on the map (meters, display only).
+ROUTE_MAP_DISPLAY_SEP_M = 14.0
 
 st.title("Predictive Traffic Routing: Google vs Our Model")
 
@@ -30,6 +36,78 @@ day_options = [
 day_of_week = st.selectbox("Departure day", day_options, index=0)
 hour = st.slider("Departure hour", 0, 23, 8)
 is_weekend = 1 if day_of_week in {"Saturday", "Sunday"} else 0
+
+
+def _segment_unit_en(lat0: float, lon0: float, lat1: float, lon1: float) -> tuple[float, float]:
+    """Unit direction (east, north) in a local tangent plane, meters space."""
+    avg_lat_rad = math.radians((lat0 + lat1) * 0.5)
+    d_n = (lat1 - lat0) * 111_320.0
+    d_e = (lon1 - lon0) * 111_320.0 * math.cos(avg_lat_rad)
+    ln = math.hypot(d_e, d_n)
+    if ln < 1e-6:
+        return 1.0, 0.0
+    return d_e / ln, d_n / ln
+
+
+def _offset_polyline_for_map(
+    points: list[tuple[float, float]], lateral_m: float
+) -> list[tuple[float, float]]:
+    """
+    Shift polyline vertices perpendicular to local travel direction so multiple
+    routes remain visible when geometry coincides.
+    """
+    if len(points) < 2 or abs(lateral_m) < 1e-6:
+        return list(points)
+
+    n = len(points)
+    out: list[tuple[float, float]] = []
+    for j in range(n):
+        if j == 0:
+            ue, un = _segment_unit_en(points[0][0], points[0][1], points[1][0], points[1][1])
+        elif j == n - 1:
+            ue, un = _segment_unit_en(
+                points[j - 1][0], points[j - 1][1], points[j][0], points[j][1]
+            )
+        else:
+            e1, n1 = _segment_unit_en(
+                points[j - 1][0], points[j - 1][1], points[j][0], points[j][1]
+            )
+            e2, n2 = _segment_unit_en(
+                points[j][0], points[j][1], points[j + 1][0], points[j + 1][1]
+            )
+            ue, un = e1 + e2, n1 + n2
+            ln = math.hypot(ue, un)
+            if ln < 1e-6:
+                ue, un = e1, n1
+            else:
+                ue, un = ue / ln, un / ln
+        # Right-of-travel perpendicular in (east, north).
+        perp_e, perp_n = un, -ue
+        lat, lon = points[j][0], points[j][1]
+        d_north_m = lateral_m * perp_n
+        d_east_m = lateral_m * perp_e
+        cos_lat = max(0.2, math.cos(math.radians(lat)))
+        out.append(
+            (
+                lat + d_north_m / 111_320.0,
+                lon + d_east_m / (111_320.0 * cos_lat),
+            )
+        )
+    return out
+
+
+def _routes_meta_for_map_display(
+    routes_meta: list[dict], *, separation_m: float = ROUTE_MAP_DISPLAY_SEP_M
+) -> list[dict]:
+    """Shallow-copy route dicts with display-only offset polylines."""
+    nr = len(routes_meta)
+    display: list[dict] = []
+    for i, r in enumerate(routes_meta):
+        lateral_m = (i - (nr - 1) * 0.5) * separation_m
+        rr = dict(r)
+        rr["points"] = _offset_polyline_for_map(list(r.get("points") or []), lateral_m)
+        display.append(rr)
+    return display
 
 
 def _recompute_routes() -> None:
@@ -131,7 +209,7 @@ if result is not None:
             f"Trip: {result['start_name']} -> {result['end_name']} | "
             f"{result['day_of_week']} @ {result['hour']:02d}:00"
         )
-        map_obj = render_multi_route_map(result["routes_meta"])
+        map_obj = render_multi_route_map(_routes_meta_for_map_display(result["routes_meta"]))
         st_folium(map_obj, width=900, height=520, key="compare_route_map")
 
         df = result["df"].copy()
