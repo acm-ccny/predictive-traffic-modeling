@@ -9,12 +9,14 @@ import pandas as pd
 from scipy.spatial import KDTree
 from sklearn.ensemble import RandomForestRegressor
 
+from traffic_routing.config import ML_DATASETS_DIR
+
 # =========================
 # 1. LOAD DATA
 # =========================
-nodes = pd.read_csv("data/ml_datasets/routing_nodes.csv")
-edges = pd.read_csv("data/ml_datasets/routing_edges.csv")
-ml_data = pd.read_csv("data/ml_datasets/congestion_ml.csv")
+nodes = pd.read_csv(ML_DATASETS_DIR / "routing_nodes.csv")
+edges = pd.read_csv(ML_DATASETS_DIR / "routing_edges.csv")
+ml_data = pd.read_csv(ML_DATASETS_DIR / "congestion_ml.csv")
 
 # Optional affine calibration vs reference (e.g. Google) — defaults are no-op.
 ROUTE_ETA_CALIB_A = float(os.environ.get("ROUTE_ETA_CALIB_A", "1.0"))

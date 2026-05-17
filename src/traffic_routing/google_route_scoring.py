@@ -10,8 +10,8 @@ from typing import Iterable
 
 from scipy.spatial import KDTree
 
-from encoded_polyline import decode_polyline
-from routing_engine import (
+from traffic_routing.encoded_polyline import decode_polyline
+from traffic_routing.routing_engine import (
     _urban_free_flow_mps,
     _urban_intersection_delay_sec,
     nodes,

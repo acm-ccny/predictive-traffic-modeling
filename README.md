@@ -1,42 +1,91 @@
-# team-1
+# Predictive Traffic Routing (NYC)
 
-## Google multi-route comparison app
+Compare **Google Directions** route durations with **our congestion model** on the same alternative routes. The Streamlit app geocodes any start/end place, fetches up to three Google driving routes, scores each with the local model, and shows them on one map.
 
-This app compares:
-- Google Directions API route durations (defaults to static `duration`; optional `duration_in_traffic` via env)
-- Our model ETA on overview polylines by default, with **partial** per-route length calibration vs Google's `distance_m`
+## Repository layout
 
-### Setup
+```
+team-1/
+├── app/
+│   └── streamlit_app.py      # Streamlit UI (run this)
+├── src/traffic_routing/      # Python package (routing model + Google APIs)
+├── scripts/
+│   └── ensure_ml_datasets.py # Unzip ML CSVs if only the .zip is present
+├── tests/                    # Pytest (integration tests call live Google APIs)
+├── notebooks/                # Data cleaning, merging, EDA, modeling (offline)
+├── data/                     # Raw/processed data and routing graph CSVs
+├── docs/                     # Design notes
+├── requirements.txt
+├── pyproject.toml            # Editable install: pip install -e .
+└── .env.example              # Copy to .env for your API key
+```
 
-1. Create and activate a virtual environment.
-2. Install dependencies:
-   - `pip install -r requirements.txt`
-3. Configure Google Maps API key (Directions + Geocoding enabled):
-   - Option A: put `GOOGLE_MAPS_API_KEY=...` in the project root `.env` (loaded automatically via `python-dotenv` when the app imports `google_places`)
-   - Option B: set env var `GOOGLE_MAPS_API_KEY` in your shell before `streamlit run`
-   - Option C: create `.streamlit/secrets.toml` with:
-     - `GOOGLE_MAPS_API_KEY = "your-key"`
+## Quick start
 
-### Run
+From the repository root:
 
-- `streamlit run streamlit_UI.py`
+```bash
+python -m venv .venv
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
 
-### Route benchmark tests (pytest)
+pip install -r requirements.txt
+pip install -e .
 
-- Install deps: `pip install -r requirements.txt`
-- Run benchmark routes against live Google APIs:
-  - `pytest -s -m integration tests/test_route_benchmark.py`
-- Optional pass/fail guardrail by delta magnitude (minutes):
-  - `ROUTE_BENCH_MAX_ABS_DELTA_MIN=4.0 pytest -s -m integration tests/test_route_benchmark.py`
-- The test prints a compact table with departure context, Google ETA, model ETA, delta, and route summary.
-- Benchmarks pass `day_of_week` + `hour` into Directions (used when traffic requests are enabled).
+python scripts/ensure_ml_datasets.py   # only needed if routing CSVs are missing
 
-### Notes
+cp .env.example .env
+# Edit .env and set GOOGLE_MAPS_API_KEY=...
 
-- Users can enter any start/end place (resolved with Google geocoding).
-- The model uses hour + weekend/rush-hour + borough context; day-of-week is mapped to weekend flag (`Saturday/Sunday => is_weekend=1`).
+streamlit run app/streamlit_app.py
+```
 
-### Routing tuning (optional env vars)
+Or use the Makefile (same steps):
+
+```bash
+make install
+make setup-data
+make run
+```
+
+### Google Maps API key
+
+Enable **Directions** and **Geocoding** on your key. Configure it using one of:
+
+- **`.env`** in the project root (recommended): `GOOGLE_MAPS_API_KEY=...` — loaded automatically via `python-dotenv`
+- **Shell**: `export GOOGLE_MAPS_API_KEY=...` before `streamlit run`
+- **Streamlit secrets**: `.streamlit/secrets.toml` with `GOOGLE_MAPS_API_KEY = "..."`
+
+### Routing data
+
+The app loads graph and training CSVs from `data/ml_datasets/`:
+
+- `routing_nodes.csv`, `routing_edges.csv`, `congestion_ml.csv`
+
+If those files are missing but `data/ml_datasets/ml_datasets.zip` is present, run:
+
+```bash
+python scripts/ensure_ml_datasets.py
+```
+
+## Route benchmark tests (pytest)
+
+Integration tests call live Google APIs (key required):
+
+```bash
+pytest -s -m integration tests/test_route_benchmark.py
+```
+
+Optional pass/fail guardrail by delta magnitude (minutes):
+
+```bash
+ROUTE_BENCH_MAX_ABS_DELTA_MIN=4.0 pytest -s -m integration tests/test_route_benchmark.py
+```
+
+## Notebooks
+
+Jupyter notebooks under `notebooks/` cover data cleaning, merging, EDA, and offline modeling. They are not required to run the Streamlit app.
+
+## Routing tuning (optional env vars)
 
 - `ROUTING_HEAL_PAIR_DEG` — KDTree pair distance in degrees for local healing (default `0.02`).
 - `ROUTING_MAX_HEAL_M` — skip healed links longer than this many meters (default `850`).
@@ -54,6 +103,8 @@ This app compares:
 - `ROUTE_POLYLINE_CHORD_FACTOR` — uniform chord inflation when Google distance is **not** used for scaling (default `1.12`).
 - `ROUTE_POLYLINE_SCALE_MIN`, `ROUTE_POLYLINE_SCALE_MAX` — clamp on `google_distance_m / sum(chords)` before blending (defaults `0.93`, `1.28`).
 - `ROUTE_POLYLINE_DISTANCE_BLEND` — `length_scale = 1 + blend * (clamped_ratio - 1)` (default `0.45`).
-- `ROUTE_ETA_CALIB_A`, `ROUTE_ETA_CALIB_B` — affine calibration on predicted seconds: `A * seconds + B` (defaults `1.0`, `0.0`). Applied in `predict_route` and `google_route_scoring.score_polyline_eta_seconds`.
+- `ROUTE_ETA_CALIB_A`, `ROUTE_ETA_CALIB_B` — affine calibration on predicted seconds: `A * seconds + B` (defaults `1.0`, `0.0`). Applied in `predict_route` and `score_polyline_eta_seconds`.
   - Practical tuning: increase `A` if ETAs are low proportionally; increase `B` if ETAs are low by a mostly fixed offset.
 - `GOOGLE_DIRECTIONS_AVOID` — passed to Google Directions `avoid` (default `highways`, matching local-road training). Use pipe-separated values per Google docs (e.g. `highways|tolls`), or set empty to disable.
+
+Further design detail: [docs/google-multi-route-model-scoring.md](docs/google-multi-route-model-scoring.md).

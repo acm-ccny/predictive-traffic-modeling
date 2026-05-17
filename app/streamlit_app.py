@@ -1,15 +1,22 @@
-# This STREAMLIT APP should actually be a separate .py file, but for simplicity we include it here.
 from __future__ import annotations
 
 import math
+import sys
+from pathlib import Path
+
 import pandas as pd
 import streamlit as st
 from streamlit_folium import st_folium
 
-from google_directions import fetch_route_alternatives
-from google_places import resolve_place
-from google_route_scoring import decode_polyline, score_polyline_eta_seconds
-from routing_engine import render_multi_route_map
+# Allow `streamlit run app/streamlit_app.py` without `pip install -e .`
+_SRC = Path(__file__).resolve().parents[1] / "src"
+if _SRC.is_dir() and str(_SRC) not in sys.path:
+    sys.path.insert(0, str(_SRC))
+
+from traffic_routing.google_directions import fetch_route_alternatives
+from traffic_routing.google_places import resolve_place
+from traffic_routing.google_route_scoring import decode_polyline, score_polyline_eta_seconds
+from traffic_routing.routing_engine import render_multi_route_map
 
 # Lateral separation between overlapping route polylines on the map (meters, display only).
 ROUTE_MAP_DISPLAY_SEP_M = 14.0

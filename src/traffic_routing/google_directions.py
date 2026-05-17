@@ -11,8 +11,8 @@ from zoneinfo import ZoneInfo
 
 import requests
 
-from encoded_polyline import decode_polyline
-from google_places import get_maps_api_key
+from traffic_routing.encoded_polyline import decode_polyline
+from traffic_routing.google_places import get_maps_api_key
 
 # Keep default behavior aligned with routing_engine without importing heavy model code.
 GOOGLE_DIRECTIONS_AVOID = os.environ.get("GOOGLE_DIRECTIONS_AVOID", "highways").strip()

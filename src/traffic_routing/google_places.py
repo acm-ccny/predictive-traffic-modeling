@@ -5,24 +5,11 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
-from pathlib import Path
 from urllib.parse import urlencode
 
 import requests
 
-
-def _load_dotenv() -> None:
-    """Load project root `.env` so `os.getenv` sees GOOGLE_MAPS_API_KEY for Streamlit."""
-    try:
-        from dotenv import load_dotenv
-    except ImportError:
-        return
-    env_path = Path(__file__).resolve().parent / ".env"
-    if env_path.is_file():
-        load_dotenv(env_path)
-
-
-_load_dotenv()
+import traffic_routing.config  # loads project `.env`
 
 GEOCODE_URL = "https://maps.googleapis.com/maps/api/geocode/json"
 
